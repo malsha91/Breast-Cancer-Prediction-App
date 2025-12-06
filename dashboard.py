@@ -5,13 +5,17 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Loading the trained model
+# Load model
 with open("breast_cancer_model.pkl", "rb") as file:
     model = pickle.load(file)
 
 st.title("Breast Cancer Prediction App")
-st.write("Predict whether a tumor is Malignant or Benign using logistic regression.")
+st.write("Predict whether a tumor is Malignant or Benign using Logistic Regression.")
 
+# Initialize data
+data = None
+
+# Upload CSV
 uploaded_file = st.file_uploader("Upload CSV file with features", type="csv")
 
 if uploaded_file:
@@ -19,9 +23,9 @@ if uploaded_file:
     st.write("Dataset Preview:")
     st.dataframe(data.head())
 
-    if st.button("Predict on Uploaded Data"):#button to trigger prediction
+    if st.button("Predict on Uploaded Data"):
         predictions = model.predict(data)
-        data["Prediction"] = ["Malignant" if p==0 else "Benign" for p in predictions]
+        data["Prediction"] = ["Malignant" if p == 0 else "Benign" for p in predictions]
         st.write("Predictions:")
         st.dataframe(data)
 
@@ -32,18 +36,18 @@ if uploaded_file:
             mime="text/csv"
         )
 
-
+# Manual input
 st.subheader("Manual Input for Prediction")
 
-
-features = list(data.columns) if uploaded_file else [
-    "id","diagnosis","radius_mean","texture_mean","perimeter_mean","area_mean",
-    "smoothness_mean","compactness_mean","concavity_mean","concave points_mean","symmetry_mean",
-    "fractal_dimension_mean","radius_se","texture_se","perimeter_se","area_se","smoothness_se","compactness_se",
-    "concavity_se","concave points_se","symmetry_se","fractal_dimension_se","radius_worst","texture_worst","perimeter_worst",
-    "area_worst","smoothness_worst","compactness_worst","concavity_worst","concave points_worst",
-    "symmetry_worst","fractal_dimension_worst"
+default_features = [
+    "radius_mean","texture_mean","perimeter_mean","area_mean","smoothness_mean",
+    "compactness_mean","concavity_mean","concave points_mean","symmetry_mean",
+    "fractal_dimension_mean","radius_worst","texture_worst","perimeter_worst",
+    "area_worst","smoothness_worst","compactness_worst","concavity_worst",
+    "concave points_worst","symmetry_worst","fractal_dimension_worst"
 ]
+
+features = list(data.columns) if data is not None else default_features
 
 input_data = []
 for feature in features:
@@ -53,12 +57,13 @@ for feature in features:
 if st.button("Predict Manual Input"):
     input_array = np.array([input_data])
     prediction = model.predict(input_array)
-    pred_label = "Malignant" if prediction[0]==0 else "Benign"
+    pred_label = "Malignant" if prediction[0] == 0 else "Benign"
     st.write(f"Prediction: {pred_label}")
 
-#visualizations
-st.subheader("Prediction Distribution (CSV Upload)")
-if uploaded_file:
+# Visualization
+if data is not None and "Prediction" in data.columns:
+    st.subheader("Prediction Distribution")
+    plt.figure(figsize=(6,4))
     sns.countplot(x="Prediction", data=data)
     plt.title("Prediction Distribution")
     st.pyplot(plt)
